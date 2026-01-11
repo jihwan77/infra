@@ -2,7 +2,7 @@
 
 ---
 
-# 🧱 Infrastructure Architecture
+# Infrastructure Architecture
 
 ## 1. 프로젝트 개요
 
@@ -18,14 +18,19 @@ AWS는 외부 트래픽 진입점 및 보안 계층으로 활용하는 구조를
 
 본 인프라는 크게 다음 두 영역으로 구성된다.
 
+<img width="1513" height="803" alt="image" src="https://github.com/user-attachments/assets/7c667206-e364-4788-938b-d1d0b6af6169" />
+
+
+
 * **AWS Cloud 영역**
 
   * 외부 사용자 트래픽 수신
   * TLS 인증, WAF, CDN, DDoS 방어
+  * 실습 환경 제공
 * **On-Premise (ESXi 기반) 영역**
 
   * 실제 서비스 운영
-  * CI/CD, 모니터링, 인증, 실습 환경 제공
+  * CI/CD, 모니터링, 인증
 
 외부 사용자는 On-premise를 통해 서비스에 접근하고, AWS에서 실습 환경을 제공받는다.
 AWS와 On-Premise 간에는 **Site-to-Site VPN**으로 안전한 통신을 구성하였다.
@@ -43,6 +48,10 @@ AWS와 On-Premise 간에는 **Site-to-Site VPN**으로 안전한 통신을 구�
 
 On-Premise 환경은 **VMware ESXi Host** 위에서 구성되었다.
 
+<img width="1484" height="816" alt="image" src="https://github.com/user-attachments/assets/02227b86-6d68-402a-bf8e-8704b59b1a64" />
+
+
+
 ### ESXi 기반 구성 이유
 
 * 물리 서버 자원 효율적 사용
@@ -59,7 +68,7 @@ ESXi 상의 VM들은 기능별로 명확히 분리하였다.
 * LAB VM
 * Network Gateway VM (pfSense)
 
-이러한 분리는 장애 대처를 쉽게 하고, 운영 관점에서 책임 범위를 명확히 하기 위함이다.
+이러한 분리는 장애 대처를 빠르게 대응하고, 운영 관점에서 책임 범위를 명확히 하기 위함이다.
 
 ---
 
@@ -95,6 +104,11 @@ pfSense의 주요 역할:
 ## 5. AWS 연계 인프라
 
 AWS는 **외부 진입점 및 보안 계층**으로 활용된다.
+
+<img width="1421" height="826" alt="image" src="https://github.com/user-attachments/assets/9c4a3e1e-5d4e-41cc-9d42-be8a772339a2" />
+
+
+
 
 ### 주요 구성 요소
 
@@ -170,9 +184,7 @@ CI/CD 영역은 **애플리케이션 빌드부터 배포까지의 자동화 파�
 * **Harbor**
 
   * Private Container Registry
-* **Trivy**
 
-  * 이미지 취약점 스캔
 
 ### 흐름 요약
 
@@ -233,6 +245,9 @@ LAB 영역은 교육·실습·테스트를 고려한 구조로,
 ## 10. Infrastructure as Code (IaC)
 
 본 프로젝트에서는 인프라의 일관성과 재현성을 위해 **Infrastructure as Code** 개념을 적극 활용하였다.
+
+<img width="1768" height="718" alt="image" src="https://github.com/user-attachments/assets/0e55af87-fffe-40a2-81c5-2a243aa7da91" />
+
 
 ### Terraform 활용
 
@@ -310,6 +325,12 @@ On-Premise 환경 특성상 모든 요소를 IaC로 관리하기는 어렵지만
 * 멀티 클러스터 GitOps 구조
 * 중앙 로그/메트릭 장기 보관
 * Zero Trust 네트워크 모델 일부 적용
+
+---
+
+
+🔗 **Project Notion Workspace**  
+👉 (https://www.notion.so/Infrastructure-297e338a90a2803c8ce5c18d5c153beb?source=copy_link)
 
 ---
 
