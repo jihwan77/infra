@@ -1,0 +1,22 @@
+---
+admin_users:
+  - name: devops
+    groups: wheel
+    shell: /bin/bash
+
+base_packages:
+  - vim
+  - git
+  - wget
+  - curl
+  - net-tools
+  - bind-utils
+  - bash-completion
+  - chrony
+  - firewalld
+  - nginx
+  - audit
+
+ssh_port: 22
+permit_root_login: "no"
+password_authentication: "yes"

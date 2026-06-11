@@ -1,0 +1,14 @@
+---
+- name: Initial Linux server setup
+  hosts: linux_servers
+  become: true
+
+  roles:
+    - users
+    - sudoers
+    - packages
+    - chrony
+    - firewalld
+    - nginx
+    - ssh
+    - selinux

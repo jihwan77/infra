@@ -1,0 +1,25 @@
+---
+- name: Disable root SSH login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: "PermitRootLogin {{ permit_root_login }}"
+    backup: true
+  notify: Restart sshd
+
+- name: Disable root SSH login in drop-in config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    create: yes
+    backup: true
+  notify: Restart sshd
+
+- name: Configure SSH password authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication {{ password_authentication }}"
+    backup: true
+  notify: Restart sshd
