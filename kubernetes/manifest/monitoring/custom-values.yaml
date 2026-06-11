@@ -1,0 +1,65 @@
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 30090
+    port: 9090
+    targetPort: 9090
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  enabled: false
+
+alertmanager:
+  enabled: false
+  config:
+    global:
+      resolve_timeout: 5m
+      slack_api_url: "https://hooks.slack.com/services/XXXXXXXX/XXXXXXXXXXXX/XXXXXXXXXXXXXXXX"
+
+    route:
+      # namespace 기반 alert 분류 유지 (네 환경과 동일)
+      group_by: ['namespace']
+      group_wait: 30s
+      group_interval: 1m
+      repeat_interval: 1m
+      receiver: "slack-notify"
+
+      routes:
+        # Watchdog & InfoInhibitor 무시 (기존 동작과 동일)
+        - receiver: "null"
+          matchers:
+            - alertname="Watchdog"
+
+        - receiver: "null"
+          matchers:
+            - alertname="InfoInhibitor"
+
+        # monitoring namespace의 알람 슬랙으로 전송
+        - receiver: "slack-notify"
+          matchers:
+            - namespace="monitoring"
+
+    receivers:
+      - name: "null"
+      - name: "slack-notify"
+        slack_configs:
+          - channel: "#ce5-최종"
+            send_resolved: true
+            title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+            text: |
+              {{ range .Alerts }}
+              *Alert:* {{ .Labels.alertname }}
+              *Namespace:* {{ .Labels.namespace }}
+              *Instance:* {{ .Labels.instance }}
+              *Severity:* {{ .Labels.severity }}
+              *Description:* {{ .Annotations.description }}
+              *Started:* {{ .StartsAt }}
+              ---
+              {{ end }}
+
+serviceMonitorSelector:
+  matchLabels:
+    release: kube-prom
+

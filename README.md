@@ -334,5 +334,13 @@ On-Premise 환경 특성상 모든 요소를 IaC로 관리하기는 어렵지만
 
 ---
 
+## 관련 문서
+
+| 구분 | 문서 | 설명 |
+|---|---|---|
+|  Kubernetes | [Kubernetes 구성 문서](https://github.com/jihwan77/infra/blob/main/kubernetes/kubernetes.md) | Deployment, Service, ConfigMap, Secret 등 Kubernetes 배포 리소스 구성 |
+|  CI/CD | [CI/CD 구성 문서 ](https://github.com/jihwan77/infra/blob/main/jenkins/jenkins.md) | Jenkins Pipeline, Docker Build, 배포 자동화 흐름 정리 |
+|  Terraform | [Terraform 구성 문서 ](https://github.com/jihwan77/infra/blob/main/terraform/terraform.md) | AWS 인프라 프로비저닝 및 Terraform Runner 구성 |
+
 
 

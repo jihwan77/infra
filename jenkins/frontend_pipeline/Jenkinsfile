@@ -1,0 +1,163 @@
+pipeline {
+    agent any
+    tools {
+        nodejs 'node-20'
+    }
+
+    environment {
+        REGISTRY = "172.16.X.52"
+        PROJECT  = "frontend"
+        IMAGE    = "${REGISTRY}/${PROJECT}/frontend:${BUILD_NUMBER}"
+
+        GIT_REPO = "git@172.16.X.51:cve-labhub/cve-labhub-frontend.git"
+        GIT_BRANCH = "dev"
+
+        INFRA_REPO = "git@172.16.X.51:cve-labhub/cve-labhub-infra.git"
+        INFRA_BRANCH = "main"
+        
+        NEXT_PUBLIC_API_BASE = "https://cvexpert.org:443"
+        NEXT_PUBLIC_LAMBDA_ANALYSIS_URL = "https://XXXXXXXXXXXXXXXXXXXXXXXXXXX.lambda-url.ap-northeast-2.on.aws"
+        LAMBDA_ANALYSIS_URL = "https://XXXXXXXXXXXXXXXXXXXXXXXXXX.lambda-url.ap-northeast-2.on.aws"
+    }
+
+    stages {
+
+        stage('Clone Repositories') {
+            steps {
+                echo " Frontend 및 Infra 저장소 클론 중..."
+                dir('frontend') {
+                    git branch: "${GIT_BRANCH}",
+                        credentialsId: 'git',
+                        url: "${GIT_REPO}"
+                }
+                dir('infra') {
+                    git branch: "${INFRA_BRANCH}",
+                        credentialsId: 'git',
+                        url: "${INFRA_REPO}"
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo " npm 의존성 설치 (npm ci)..."
+                dir('frontend') {
+                    sh '''
+                        npm ci
+                    '''
+                }
+            }
+        }
+
+        stage('Build Frontend (Next.js)') {
+            steps {
+                echo " Next.js 빌드 시작..."
+                dir('frontend') {
+                    sh '''
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo " Docker 이미지 빌드 중..."
+                sh """
+              docker build --no-cache \
+              --build-arg NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE} \
+              --build-arg NEXT_PUBLIC_LAMBDA_ANALYSIS_URL=${NEXT_PUBLIC_LAMBDA_ANALYSIS_URL} \
+              --build-arg LAMBDA_ANALYSIS_URL=${LAMBDA_ANALYSIS_URL} \
+              -t ${IMAGE} \
+              -f infra/manifest/frontend/Dockerfile frontend
+        """
+
+            }
+        }
+
+        stage('Docker Login to Harbor') {
+            steps {
+                echo " Harbor 레지스트리 로그인..."
+                withCredentials([
+                    usernamePassword(credentialsId: 'harbor-credential', usernameVariable: 'HUSER', passwordVariable: 'HPASS')
+                ]) {
+                    sh '''
+                        echo "$HPASS" | docker login $REGISTRY -u "$HUSER" --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Unsigned Image') {
+            steps {
+                echo " Harbor로 이미지 push..."
+                sh "docker push ${IMAGE}"
+            }
+        }
+
+        stage('Sign Image with Cosign') {
+            steps {
+                echo " cosign 서명 중..."
+                withCredentials([
+                    file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY'),
+                    string(credentialsId: 'cosign-pass', variable: 'COSIGN_PASS')
+                ]) {
+                    sh '''
+                        export COSIGN_PASSWORD="$COSIGN_PASS"
+                        cosign sign --yes --key "$COSIGN_KEY" ${IMAGE}
+                    '''
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo " 로컬 이미지 정리..."
+                sh 'docker rmi ${IMAGE} || true'
+            }
+        }
+
+        stage('Update YAML Image Tag and Push') {
+            steps {
+                echo " YAML 내 Harbor 이미지 버전 업데이트 및 커밋 중..."
+                dir('infra') {
+                    sshagent(credentials: ['git']) {
+                        sh '''
+                            IMAGE_PATH="${REGISTRY}/${PROJECT}/frontend"
+                            NEW_TAG="${BUILD_NUMBER}"
+
+                            echo " YAML 파일의 '${IMAGE_PATH}:<old>' → '${IMAGE_PATH}:${NEW_TAG}' 로 변경합니다."
+
+                            #  항상 최신 main으로 초기화
+                            git fetch origin
+                            git reset --hard origin/main
+
+                            #  YAML 수정
+                            grep -rl "${IMAGE_PATH}:" manifest/frontend | while read -r file; do
+                            echo "  ▶ ${file} 수정 중..."
+                            sed -i "s|${IMAGE_PATH}:.*|${IMAGE_PATH}:${NEW_TAG}|g" "$file"
+                            done
+
+                            #  커밋 및 푸시
+                            git add manifest/frontend
+                            git commit -m "ci: Update frontend image to ${IMAGE_PATH}:${NEW_TAG}" || echo "No changes to commit"
+
+                            #  원격에 새로운 커밋이 있을 경우 rebase 후 push
+                            git pull --rebase origin main || true
+                            git push origin ${INFRA_BRANCH}
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo " 성공적으로 Next.js 프런트엔드 이미지가 Harbor에 업로드 및 YAML 버전 업데이트 완료!"
+        }
+        failure {
+            echo " 빌드 실패! 로그를 확인하세요."
+        }
+    }
+}

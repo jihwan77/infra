@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cvelabhub-back
+  namespace: default
+  labels:
+    app: cvelabhub-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cvelabhub-back
+  template:
+    metadata:
+      labels:
+        app: cvelabhub-back
+    spec:
+      imagePullSecrets:
+        - name: harbor-secret
+      containers:
+        - name: cvelabhub-app
+          image: 172.16.X.52/demo/app:20
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082 # 메인 서비스 포트
+            - containerPort: 9090 # 모니터링 포트
+          envFrom:
+            - configMapRef:
+                name: cvelabhub-config
+            - secretRef:
+                name: cvelabhub-secret
+          
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cvelabhub-frontend-config
+  namespace: default
+data:
+  NEXT_PUBLIC_API_BASE: "https://cvexpert.org"
