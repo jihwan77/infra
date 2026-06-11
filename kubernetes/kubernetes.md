@@ -63,6 +63,9 @@ kubernetes/
 │   ├── custom-values.yaml
 │   └── high-cpu-rule.yaml
 │
+├── security/ 
+│ └── cvelabhub_networkpolicy.yaml
+│
 └── README.md
 ```
 
@@ -635,7 +638,97 @@ spec:
 | 지속 시간      | 2분                       |
 | Severity   | `warning`                |
 
+---
 
+## 23. NetworkPolicy 구성 (추가 적용 내용)
+
+본 프로젝트는 Kubernetes 내부 Pod 간 불필요한 접근을 제한하기 위해 NetworkPolicy를 추가한다.
+
+NetworkPolicy는 다음 통신만 허용한다.
+
+| Source                    | Destination  |   Port | 설명                             |
+| ------------------------- | ------------ | -----: | ------------------------------ |
+| `ingress-nginx` namespace | Backend Pod  | `8082` | Ingress를 통한 Backend API 접근     |
+| `ingress-nginx` namespace | Frontend Pod | `3000` | Ingress를 통한 Frontend 접근        |
+| `monitoring` namespace    | Backend Pod  | `9090` | Prometheus의 Actuator Metric 수집 |
+
+그 외 Pod에서 Backend / Frontend Pod로 직접 접근하는 트래픽은 제한된다.
+
+> NetworkPolicy는 Calico, Cilium 등 NetworkPolicy를 지원하는 CNI 환경에서 실제 트래픽 제어가 적용된다.
+
+---
+
+### `security/cvelabhub_networkpolicy.yaml`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-cvelabhub
+  namespace: default
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - cvelabhub-back
+          - cvelabhub-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8082
+        - protocol: TCP
+          port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-to-backend
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: cvelabhub-back
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090
+```
+
+
+---
+
+## NetworkPolicy 적용 효과
+
+NetworkPolicy 적용 전에는 같은 클러스터 내부의 다른 Pod가 Backend 또는 Frontend Pod로 직접 접근할 수 있다.
+
+NetworkPolicy 적용 후에는 다음 접근만 허용된다.
+
+```text
+사용자 요청
+→ Ingress Controller
+→ Frontend 3000 / Backend 8082
+```
+
+```text
+Prometheus
+→ Backend 9090
+```
+
+이를 통해 외부 접근 경로는 Ingress로 제한하고, Prometheus는 Backend의 Monitoring Endpoint만 수집하도록 구성하여 클러스터 내부 접근 범위를 최소화한다.
 
 
 
