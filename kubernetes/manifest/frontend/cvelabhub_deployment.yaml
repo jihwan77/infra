@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cvelabhub-frontend
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cvelabhub-frontend
+  template:
+    metadata:
+      labels:
+        app: cvelabhub-frontend
+    spec:
+      imagePullSecrets:
+        - name: harbor-secret
+      containers:
+        - name: cvelabhub-frontend
+          image: 172.16.X.52/frontend/frontend:55
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: cvelabhub-frontend-config
+                

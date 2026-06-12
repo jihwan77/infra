@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cvelabhub-config
+  namespace: default
+data:
+  SERVER_PORT: "8082"
+  DB_HOST: "172.16.X.100:3306"
+  DB_NAME: "cveuser"
+  DB_USER: "root"
+
+  KEYCLOAK_ISSUER: "http://172.16.X.110:9090/realms/dev-realm"
+  KEYCLOAK_CLIENT_ID: "labhub-admin"
+  GRANT_TYPE: "password"
+  KEYCLOAK_BASE_URL: "http://172.16.1.110:9090"
+  KEYCLOAK_REALM: "dev-realm"
+
+  MAIL_HOST: "smtp.gmail.com"
+  MAIL_PORT: "465"
+  MAIL_USERNAME: "keyc9479@gmail.com"
+  MAIL_PROTOCOL: "smtps"
+
+  AWS_S3_REGION: "ap-northeast-2"
+  AWS_S3_BUCKET_NAME: "gmg-docs"
+
+  CORS_ALLOWED_ORIGINS: "http://61.XX.XXX.XXX,https://61.XX.XXX.XXX,https://gmg.cvexpert.org,https://cvexpert.org"
+  CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+  CORS_ALLOWED_HEADERS: "Authorization,Content-Type"
+  CORS_ALLOW_CREDENTIALS: "true"
+
+  NAVER_API_URL: "https://openapi.naver.com/v1/search/news.json"
+
+  GUACAMOLE_SERVER_BASE_URL: "https://cvexpert.org:443/guacamole"
+  GUACAMOLE_IFRAME_BASE_URL: "https://cvexpert.org:443/guacamole"
+  GUACAMOLE_DB_URL: "jdbc:mysql://172.16.X.20:3306/guacamole_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul"
+  GUACAMOLE_DB_USERNAME: "guacamole_user"
+
+
+  TERRAFORM_SERVER_URL: "http://172.16.X.20:8080"
+
+  EC2_SSH_USERNAME: "ubuntu"
+  # MCP Server (AI Observability)
+  MCP_SERVER_BASE_URL: "http://10.0.X.34:8000"
+
+  AWS_CLOUDWATCH_DEFAULT_REGION: "ap-northeast-2"
+  AWS_ACCESS_KEY_ID: "XXXXXXXXXXXXX"
+  AWS_SECRET_ACCESS_KEY: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  AWS_CLOUDWATCH_LOG_GROUP: "cvexpert"
+  AWS_CLOUDWATCH_METRICS_NAMESPACE_PREFIX: "cvexpert"

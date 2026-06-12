@@ -1,0 +1,9 @@
+---
+- name: Check SELinux status
+  ansible.builtin.command: getenforce
+  register: selinux_status
+  changed_when: false
+
+- name: Print SELinux status
+  ansible.builtin.debug:
+    msg: "SELinux status is {{ selinux_status.stdout }}"

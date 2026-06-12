@@ -1,0 +1,9 @@
+---
+- name: Create admin users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups }}"
+    append: true
+    shell: "{{ item.shell }}"
+    state: present
+  loop: "{{ admin_users }}"

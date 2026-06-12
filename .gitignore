@@ -1,0 +1,44 @@
+# SSH private/public keys
+config/vm-provisioning-key
+config/vm-provisioning-key.pub
+config/*key
+config/*key.pub
+config/*.pem
+config/*.key
+
+
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+terraform.tfstate
+terraform.tfstate.backup
+
+# Terraform working directory
+.terraform/
+
+# Terraform variable files containing secrets
+*.tfvars
+*.tfvars.json
+
+# Terraform lock file
+.terraform.lock.hcl
+
+# Private keys and certificates
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+*.ppk
+
+# Environment files
+.env
+*.env
+
+# Kubernetes Secret manifests
+kubernetes/manifest/backend/cvelabhub_secret.yaml
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

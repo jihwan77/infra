@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cvelabhub-app-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prom
+spec:
+  selector:
+    matchLabels:
+      app: cvelabhub-back
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: monitoring            # Service의 port 이름
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s

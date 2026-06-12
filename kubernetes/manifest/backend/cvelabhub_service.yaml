@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cvelabhub-app-svc
+  namespace: default
+  labels:
+    app: cvelabhub-back
+spec:
+  type: NodePort   # 외부 노출이 필요하면 LoadBalancer 로 변경
+  selector:
+    app: cvelabhub-back # pod template labels와 매칭시켜야함 
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+      nodePort: 30081
+    - name: monitoring
+      port: 9090
+      targetPort: 9090
+
+
